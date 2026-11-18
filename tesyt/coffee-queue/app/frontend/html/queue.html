@@ -55,7 +55,6 @@
               <p class="small">Scan with your banking app</p>
               <p class="pay-amt" id="payAmt"></p>
               <p class="small">PromptPay · Coffee Queue</p>
-              <p class="demo">Demo QR, not a real account</p>
             </div>
           </div>
           <div class="slip-sent hidden" id="slipSent">
@@ -68,7 +67,6 @@
           </div>
           <div class="pay-btns hidden" id="payBtns">
             <button class="btn cherry small" id="attach" type="button">📎 Attach slip</button>
-            <button class="btn ghost small" id="sample" type="button">Use sample</button>
             <input type="file" id="file" accept="image/*" class="hidden">
           </div>
           <div id="payMsg" class="msg hidden"></div>
@@ -206,7 +204,7 @@
     // แนบสลิป: ไฟล์ที่เลือก หรือสลิปตัวอย่าง
     async function sendSlip(getSlip) {
       showMsg($('payMsg'), '');
-      const btns = [$('attach'), $('sample')];
+      const btns = [$('attach')];
       btns.forEach((b) => { b.disabled = true; });
       try {
         const slip = await getSlip();
@@ -230,7 +228,6 @@
       $('file').value = '';
       if (f) sendSlip(() => slipFromFile(f));
     };
-    $('sample').onclick = () => sendSlip(async () => sampleSlip(last));
 
     $('another').onclick = () => {
       clearTimeout(timer);
@@ -245,9 +242,6 @@
       const q = $('q').value.trim();
       if (q) check(q, false);
     });
-
-    // ถ้าร้านตั้ง PromptPay จริงแล้ว ซ่อนป้าย "Demo QR" และปุ่ม "Use sample"
-    api('/config').then((c) => { if (c && c.promptpay) { document.querySelector('.pay-info .demo').classList.add('hidden'); $('sample').classList.add('hidden'); } }).catch(() => {});
 
     (function init() {
       const p = new URLSearchParams(location.search).get('q');
