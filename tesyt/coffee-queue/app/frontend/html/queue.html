@@ -59,6 +59,7 @@
           </div>
           <div class="slip-sent hidden" id="slipSent">
             <img id="slipThumb" alt="Your attached slip" title="Tap to enlarge">
+            <button type="button" class="slip-close hidden" id="slipClose" aria-label="Close slip">✕ Close</button>
             <div>
               <p class="slip-ok">✓ Slip attached</p>
               <p class="small" id="slipSub"></p>
@@ -152,11 +153,14 @@
     }
 
     // เครื่องดื่มพร้อมแล้ว: เสียง + สั่น + ป๊อปอัป
-    function notifyReady(order) {
+    let closeReady = null;
+    function notifyReady(order, calls) {
+      if (closeReady) closeReady();            // เรียกซ้ำ: ปิดป๊อปอัปเก่าก่อน แล้วเด้งอันใหม่
       beep(3);
       buzz();
-      const close = modal(
+      const close = closeReady = modal(
         el('p', { class: 'sheet-icon', text: '☕' }),
+        calls ? el('p', { class: 'called', text: 'Calling again (' + calls + ')' }) : '',
         el('h2', { text: queueOf(order) + ' is ready' }),
         el('p', { text: 'Pick up your drink at the counter.' }),
         el('button', { class: 'btn cherry', type: 'button', text: 'Got it', onclick: () => close() }));
@@ -178,6 +182,7 @@
             showMsg($('payMsg'), "The staff couldn't accept that slip. Please attach a clear one.");
           }
           if (statusIndex(prev.status) < 2 && idx === 2) notifyReady(order);
+          else if (idx === 2 && (order.calls || 0) > (prev.calls || 0)) notifyReady(order, order.calls);
         }
         if (q === current && idx !== 3) timer = setTimeout(() => check(q, true), POLL_MS);
       } catch (err) {
@@ -196,7 +201,7 @@
       }
     }
 
-    // แนบสลิป: ไฟล์ที่เลือก หรือสลิปตัวอย่าง
+    // แนบสลิปจากไฟล์ที่เลือก
     async function sendSlip(getSlip) {
       showMsg($('payMsg'), '');
       const btns = [$('attach')];
@@ -212,7 +217,11 @@
         btns.forEach((b) => { b.disabled = false; });
       }
     }
-    $('slipThumb').onclick = () => $('slipThumb').classList.toggle('big');
+    // ขยาย/ปิดรูปสลิป: ปุ่ม ✕ Close, แตะรูปอีกครั้ง หรือกด Esc
+    const slipBig = (on) => { $('slipThumb').classList.toggle('big', on); $('slipClose').classList.toggle('hidden', !on); };
+    $('slipThumb').onclick = () => slipBig(!$('slipThumb').classList.contains('big'));
+    $('slipClose').onclick = () => slipBig(false);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') slipBig(false); });
     $('attach').onclick = () => $('file').click();
     $('file').onchange = () => {
       const f = $('file').files[0];
