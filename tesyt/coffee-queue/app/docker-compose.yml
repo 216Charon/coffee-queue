@@ -19,6 +19,7 @@ services:
     depends_on:
       - db
 
+
   db:                       # Container 3: PostgreSQL
     image: postgres:16
     environment:
@@ -27,6 +28,7 @@ services:
       POSTGRES_DB: coffee
     volumes:
       - dbdata:/var/lib/postgresql/data   # ข้อมูลไม่หายเมื่อลบ container
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   dbdata:
